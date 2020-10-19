@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A==" crossorigin=""/>
+    <style>
+        body {
+            padding: 0;
+            margin: 0;
+        }
+        html, body, #map {
+            height: 100%;
+            width: 100vw;
+        }
+        .cases {
+            font-size: 4rem;
+            background-color: white;
+            width: 17rem;
+            height: 6rem;
+            text-align: center;
+            padding: 2rem;
+            border-radius: 2rem;
+            box-shadow: 0 0 15px rgba(0,0,0,0.2);
+            color: #EB5757;
+        }
+        .legend {
+            line-height: 18px;
+            color: #555;
+        }
+        .legend i {
+            width: 18px;
+            height: 18px;
+            float: left;
+            margin-right: 8px;
+            opacity: 0.7;
+        }
+    </style>
+    <title>geojson</title>
+</head>
+<body>
+    
+    <div id="map"></div>
+    <div id="cases" class="cases"></div>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js" integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA==" crossorigin=""></script>
+    <script type="module">
+        import provinces from '../assets/data/provinces.js';
+
+        const denBras = [50.825050, 3.264923];
+        const buda = [50.831583, 3.263336];
+        const kot = [50.820670, 3.272656];
+        const legendNumbers = [0, 10000, 15000, 20000, 30000]
+        let map; // make map global so you can add things outside the scope of showMap()
+        let geojson;
+        let info;
+        let legend;
+
+        const init = () => {
+            addCoronaNumbers()
+            showMap();
+        }
+
+        const getColor = (d) => {
+            return d > legendNumbers[4] ? '#A90606':
+                d > legendNumbers[3]  ? '#CB2929' :
+                d > legendNumbers[2]  ? '#EB5757' :
+                d > legendNumbers[1]  ? '#FF8080' :
+                '#FFB0B0';
+        }
+
+        const style = (feature) => {
+            return {
+                fillColor: getColor(feature.properties.corona), // checks density and goes over switch to determine color
+                weight: 2,
+                opacity: 1,
+                color: 'black',
+                dashArray: '7',
+                fillOpacity: 0.7
+            };
+        }
+
+        const casesPerProvince = [];
+
+        const checkProvince = province => {
+            switch(province.properties.CodeINS) {
+                case "10000":
+                    province.properties.corona = 32084;
+                    break;
+                case "4000":
+                    province.properties.corona = 35722;
+                    break;
+                case "20001":
+                    province.properties.corona = 18744;
+                    break;
+                case "20002":
+                    province.properties.corona = 9169;
+                    break;
+                case "30000":
+                    province.properties.corona = 15912;
+                    break;
+                case "40000":
+                    province.properties.corona = 18537;
+                    break;
+                case "50000":
+                    province.properties.corona = 28192;
+                    break;
+                case "60000":
+                    province.properties.corona = 31496;
+                    break;
+                case "70000":
+                    province.properties.corona = 11978;
+                    break;
+                case "80000":
+                    province.properties.corona = 5286;
+                    break;
+                case "90000":
+                    province.properties.corona = 10532;
+                    break;
+            }
+        }
+
+        const addCoronaNumbers = () => {
+            provinces.forEach(province => {
+                checkProvince(province);
+            });
+        }
+
+        // When user hovers over state: highlight state
+        const highlightFeature = (e) => {
+            const layer = e.target;
+            layer.setStyle({
+                weight: 3,
+                color: 'black',
+                dashArray: '',
+                fillOpacity: 0.7
+            });
+            if (!L.Browser.ie && !L.Browser.opera && !L.Browser.edge) {
+                layer.bringToFront();
+            }
+            console.log(layer.feature.properties)
+            info.update(layer.feature.properties);
+        }
+
+        // When user leaves state: reset styling
+        const resetHighlight = (e) => {
+            geojson.resetStyle(e.target);
+            info.update();
+        }
+
+        // When user clicks on state: autozoom to state
+        const zoomToFeature = (e) => {
+            map.fitBounds(e.target.getBounds());
+        }
+
+        // Add eventlistners to state
+        const onEachFeature = (feature, layer) => {
+            layer.on({
+                mouseover: highlightFeature,
+                mouseout: resetHighlight,
+                click: zoomToFeature
+            });
+        }
+
+        const addDiv = () => {
+            info = L.control();
+            info.onAdd = function (map) {
+                // Get excisting dom element
+                this._div = L.DomUtil.get('cases')
+                this.update();
+                return this._div;
+            };
+            // Old function notation needed, fat arrow doensn't work
+            info.update = function (props) {
+                this._div.innerHTML = props ? `😷 ${props.corona}` : ' ';
+            };
+            info.addTo(map);
+        }
+
+        const addLegend = () => {
+            legend = L.control({position: 'bottomright'});
+            legend.onAdd = (map) => {
+                // create dom element
+                const div = L.DomUtil.create('div', 'info legend');
+                for (let i = 0; i < legendNumbers.length; i++) {
+                    div.innerHTML += `<div>
+                            <i style="background:${getColor(legendNumbers[i] + 1)}""></i>
+                            ${legendNumbers[i]}${legendNumbers[i + 1] ? `-${legendNumbers[i + 1]}`  : '+'}
+                        </div>`
+                }
+                return div;
+            };
+            legend.addTo(map);
+        }
+
+        const showMap = () => {
+            map = L.map('map').setView([50.820670, 3.272656], 8);
+             L.tileLayer('https://stamen-tiles-{s}.a.ssl.fastly.net/toner-background/{z}/{x}/{y}{r}.{ext}', {
+                attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a> &mdash; Map data &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+                subdomains: 'abcd',
+                minZoom: 0,
+                maxZoom: 20,
+                ext: 'png'
+            }).addTo(map);
+            geojson = L.geoJson(provinces, {
+                style: style,
+                onEachFeature: onEachFeature
+            }).addTo(map);
+
+            addDiv();
+            addLegend();
+        }
+
+        init();
+    </script>
+</body>
+</html>

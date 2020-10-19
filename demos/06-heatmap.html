@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en"></html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A==" crossorigin=""/>
+	<style>
+        body {
+            padding: 0;
+            margin: 0;
+        }
+        html, body, #map {
+            height: 100%;
+            width: 100vw;
+        }
+    </style>
+    <title>heatmap</title>
+</head>
+<body>
+	<div id="map"></div>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js" integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA==" crossorigin=""></script>
+    <script src="../assets/plugins/heatmap/heatmap.min.js"></script>
+    <script src="../assets/plugins/heatmap/leaflet-heatmap.js"></script>
+	<script type="module">
+        import covidData from "../assets/data/corona.js"
+		let map;
+
+        const init = () => {
+            refactorCovidData(covidData);
+            showMap();
+        }
+        const refactoredCovidData = [];
+        const refactorCovidData = data => {
+            data.forEach(point => {
+                if (point.geometry) {
+                    const obj = {
+                        lat: point.geometry.coordinates[1] + Math.random()/2 - Math.random()/2, // gives inaccurate data, but for the sake of a demo: this demonstrates a lot better how a heatmap works
+                        lng: point.geometry.coordinates[0] + Math.random()/2 - Math.random()/2,
+                        count: point.properties.total_in,
+                    }
+                refactoredCovidData.push(obj);
+                }
+            });
+        }
+
+        const showMap = () => {
+			const baseLayer =  L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
+                attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+                maxZoom: 15,
+                id: 'mapbox/streets-v11',
+                tileSize: 512,
+                zoomOffset: -1,
+                accessToken: 'pk.eyJ1IjoibGFyc21hcmdpbmV0IiwiYSI6ImNrZ2R4ODd5YjBiOWsyc25hZ2RndjM0cTUifQ.CwyQrUiqLV8WzW6l_UAn7g'
+            })
+
+            var testData = {
+                data: refactoredCovidData
+            };
+
+            var cfg = {
+                radius: 0.12,
+                minOpacity: 0,
+                blur: .75,
+                "maxOpacity": .8,
+                "scaleRadius": true,
+                "useLocalExtrema": true,
+                latField: 'lat',
+                lngField: 'lng',
+                valueField: 'count'
+            };
+
+            var heatmapLayer = new HeatmapOverlay(cfg);
+            map = L.map('map', {layers: [baseLayer, heatmapLayer]}).setView([50.7, 4.2], 9);
+            heatmapLayer.setData(testData);
+        }
+
+        init();
+	</script>
+</body>
+</html>

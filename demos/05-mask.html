@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en"></html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A==" crossorigin=""/>
+	<style>
+        body {
+            padding: 0;
+            margin: 0;
+        }
+        html, body, #map {
+            height: 100%;
+            width: 100vw;
+        }
+    </style>
+	<title>mask</title>
+</head>
+<body>
+	<div id="map"></div>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js" integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA==" crossorigin=""></script>
+    <script src="../assets/plugins/mask/leaflet-mask.js"></script>
+	<script type="module">
+		let map;
+
+        const init = () => {
+            showMap();
+        }
+
+        const showMap = () => {
+			map = L.map('map').setView([51.03, 3.72], 15);
+			L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
+                attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+                maxZoom: 15,
+                id: 'mapbox/streets-v11',
+                tileSize: 512,
+                zoomOffset: -1,
+                accessToken: 'pk.eyJ1IjoibGFyc21hcmdpbmV0IiwiYSI6ImNrZ2R4ODd5YjBiOWsyc25hZ2RndjM0cTUifQ.CwyQrUiqLV8WzW6l_UAn7g'
+            }).addTo(map);
+
+            const link = "https://www.ngi.be/tiles/arcgis/rest/services/seamless_carto__default__3857__140/MapServer/tile/{z}/{y}/{x}"; //https://xyz.michelstuyts.be/
+            const fg = L.tileLayer.mask(link, {
+                maskUrl : '../assets/img/mask.png',
+                maskSize : 500
+            }).addTo(map);
+
+            map.on("mousemove", (e) => {
+                fg.setCenter(e.containerPoint);
+            });
+        }
+        init();
+	</script>
+</body>
+</html>

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en"></html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A==" crossorigin=""/>
+	<style>
+        body {
+            padding: 0;
+            margin: 0;
+        }
+        html, body, #map {
+            height: 100%;
+            width: 100vw;
+        }
+    </style>
+	<link rel="stylesheet" href="../assets/plugins/markercluster/MarkerCluster.css" />
+	<link rel="stylesheet" href="../assets/plugins/markercluster/MarkerCluster.Default.css" />
+	<title>markercluster</title>
+</head>
+<body>
+	<div id="map"></div>
+	<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js" integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA==" crossorigin=""></script>
+	<script src="../assets/plugins/markercluster/leaflet.markercluster-src.js"></script>
+	<script type="module">
+		import addressPoints from "../assets/data/docters.js"
+		let map;
+
+        const init = () => {
+            showMap();
+        }
+
+        const pinDoctor = L.icon({
+            iconUrl: '../assets/img/pin-doctor.png',
+            shadowUrl: '../assets/img/shadow-doctor.png',
+            iconSize:     [53, 120],
+            shadowSize:   [75, 64],
+            iconAnchor:   [25, 74],
+            shadowAnchor: [15, 5],
+            popupAnchor:  [5, -50]
+        });
+
+        const showMap = () => {
+			map = L.map('map').setView([51.03, 3.72], 11);
+            
+			L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
+                attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+                maxZoom: 18,
+                id: 'mapbox/light-v9',
+                tileSize: 512,
+                zoomOffset: -1,
+                accessToken: 'pk.eyJ1IjoibGFyc21hcmdpbmV0IiwiYSI6ImNrZ2R4ODd5YjBiOWsyc25hZ2RndjM0cTUifQ.CwyQrUiqLV8WzW6l_UAn7g'
+			}).addTo(map);
+
+			const markers = L.markerClusterGroup();
+		
+			addressPoints.forEach(doctor => {
+				const name = doctor.fields.naam;
+                const marker = L.marker(new L.LatLng(doctor.fields.geo_point_2d[0], doctor.fields.geo_point_2d[1]), { title: name, icon: pinDoctor});
+                //const marker = L.marker(new L.LatLng(doctor.fields.geo_point_2d[0], doctor.fields.geo_point_2d[1]), { title: name });
+				marker.bindPopup(name);
+                markers.addLayer(marker);
+                //marker.addTo(map)
+			});
+
+			map.addLayer(markers);
+        }
+
+        init();
+	</script>
+</body>
+</html>
