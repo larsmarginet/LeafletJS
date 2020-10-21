@@ -23,6 +23,7 @@
     <script src="../assets/plugins/mask/leaflet-mask.js"></script>
 	<script type="module">
 		let map;
+        const link = "https://www.ngi.be/tiles/arcgis/rest/services/seamless_carto__default__3857__140/MapServer/tile/{z}/{y}/{x}"; //https://xyz.michelstuyts.be/
 
         const init = () => {
             showMap();
@@ -39,7 +40,6 @@
                 accessToken: 'pk.eyJ1IjoibGFyc21hcmdpbmV0IiwiYSI6ImNrZ2R4ODd5YjBiOWsyc25hZ2RndjM0cTUifQ.CwyQrUiqLV8WzW6l_UAn7g'
             }).addTo(map);
 
-            const link = "https://www.ngi.be/tiles/arcgis/rest/services/seamless_carto__default__3857__140/MapServer/tile/{z}/{y}/{x}"; //https://xyz.michelstuyts.be/
             const fg = L.tileLayer.mask(link, {
                 maskUrl : '../assets/img/mask.png',
                 maskSize : 500

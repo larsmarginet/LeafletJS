@@ -29,6 +29,29 @@
             showMap();
         }
 
+        // FeatureGroup stores editable layers
+        const editableLayers = new L.FeatureGroup();
+
+        const drawControl = new L.Control.Draw({
+            draw: {
+                polyline: {
+                    shapeOptions: {
+                        color: '#f357a1',
+                        weight: 10
+                    }
+                },
+                polygon: {
+                    shapeOptions: {
+                        color: '#bada55'
+                    }
+                },
+            },
+            edit: {
+                featureGroup: editableLayers,
+                remove: true
+            }
+        });
+
         const showMap = () => {
 			map = L.map('map').setView([50.820670, 3.272656], 15);
 			L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
@@ -40,39 +63,16 @@
                 accessToken: 'pk.eyJ1IjoibGFyc21hcmdpbmV0IiwiYSI6ImNrZ2R4ODd5YjBiOWsyc25hZ2RndjM0cTUifQ.CwyQrUiqLV8WzW6l_UAn7g'
             }).addTo(map);
             
-            // FeatureGroup is to store editable layers
-            const editableLayers = new L.FeatureGroup();
             map.addLayer(editableLayers);
-
-            const drawControl = new L.Control.Draw({
-                draw: {
-                    polyline: {
-                        shapeOptions: {
-                            color: '#f357a1',
-                            weight: 10
-                        }
-                    },
-                    polygon: {
-                        shapeOptions: {
-                            color: '#bada55'
-                        }
-                    },
-                },
-                edit: {
-                    featureGroup: editableLayers,
-                    remove: true
-                }
-            });
-
             map.addControl(drawControl);
             map.on(L.Draw.Event.CREATED, (event) => {
                 const layer = event.layer;
-                // save drawing
+                // Save drawing
                 editableLayers.addLayer(layer);
             });
         }
-        init();
 
+        init();
 	</script>
 </body>
 </html>
